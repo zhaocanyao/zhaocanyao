@@ -1,0 +1,212 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>添加文章</title>
+</head>
+
+<body>
+<link rel="stylesheet" type="text/css" href="../../kindeditor-4.1.10/themes/default/default.css"/>
+<script type="text/javascript" src="../../kindeditor-4.1.10/kindeditor-min.js"></script>
+<script type="text/javascript" src="../../kindeditor-4.1.10/lang/zh_CN.js"></script>
+<script type="text/javascript">
+    (function ($, K) {
+        if (!K)
+            throw "KindEditor未定义!";
+
+        function create(target) {
+            var opts = $.data(target, 'kindeditor').options;
+            var editor = K.create(target, opts);
+            $.data(target, 'kindeditor').options.editor = editor;
+        }
+
+        $.fn.kindeditor = function (options, param) {
+            if (typeof options == 'string') {
+                var method = $.fn.kindeditor.methods[options];
+                if (method) {
+                    return method(this, param);
+                }
+            }
+            options = options || {};
+            return this.each(function () {
+                var state = $.data(this, 'kindeditor');
+                if (state) {
+                    $.extend(state.options, options);
+                } else {
+                    state = $.data(this, 'kindeditor', {
+                        options : $.extend({}, $.fn.kindeditor.defaults, $.fn.kindeditor.parseOptions(this), options)
+                    });
+                }
+                create(this);
+            });
+        }
+
+        $.fn.kindeditor.parseOptions = function (target) {
+            return $.extend({}, $.parser.parseOptions(target, []));
+        };
+
+        $.fn.kindeditor.methods = {
+            editor : function (jq) {
+                return $.data(jq[0], 'kindeditor').options.editor;
+            }
+        };
+
+        $.fn.kindeditor.defaults = {
+            resizeType : 1,
+            allowPreviewEmoticons : false,
+            allowImageUpload : false,
+            items : [
+                'fontname', 'fontsize', '|', 'forecolor', 'hilitecolor', 'bold', 'italic', 'underline',
+                'removeformat', '|', 'justifyleft', 'justifycenter', 'justifyright', 'insertorderedlist',
+                'insertunorderedlist', '|', 'emoticons', 'image', 'link'],
+            afterChange:function(){
+                this.sync();//这个是必须的,如果你要覆盖afterChange事件的话,请记得最好把这句加上.
+            }
+        };
+        $.parser.plugins.push("kindeditor");
+    })(jQuery, KindEditor);
+</script>
+<div style="padding:10px 60px 20px 60px">
+    <h2>文章基本信息</h2>
+
+    <p>The form does not perform validation before being submitted.</p>
+
+    <div style="margin:20px 0;"></div>
+
+    <form id="ff" class="easyui-form" method="post" data-options="novalidate:true">
+        <table cellpadding="5">
+            <tr>
+                <td>文章标题:</td>
+                <td><input class="easyui-textbox" type="text" data-options="required:true" id="title" /></td>
+            </tr>
+            <tr>
+                <td>标题图片:</td>
+                <td><input class="easyui-filebox" data-options="required:true" id="title_img" /></td>
+            </tr>
+            <tr>
+                <td>文章内容:</td>
+                <td><textarea id="editor_id" name="content" class="easyui-kindeditor" style="width:200px;height:100px;visibility:hidden;"></textarea></td>
+            </tr>
+            <tr>
+                <td>文章摘要:</td>
+                <td><input class="easyui-textbox" type="text" data-options="required:true" id="summary" /></td>
+            </tr>
+            <tr>
+                <td>文章作者:</td>
+                <td><input class="easyui-textbox" type="text" data-options="required:true" id="author" /></td>
+            </tr>
+        </table>
+    </form>
+    <div style="margin:40px;margin-top:25px;">
+        <a href="javascript:void(0)" class="easyui-linkbutton" onclick="submitForm()" id="btn_save_"  data-options="iconCls:'icon-save'">保存</a>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <a href="javascript:void(0)" class="easyui-linkbutton" id="btn_cancel_" data-options="iconCls:'icon-cancel'">取消</a>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function () {
+        var Article = AV.Object.extend("article");
+        var article = new Article();
+        var query = new AV.Query(Article);
+
+        //获取修改对象的id
+        var objectId = sessionStorage.getItem('objectId');
+        //自动填充数据
+        if (objectId != null) {
+            query.get(objectId, {
+                success: function (a) {
+                    $("#title").textbox('setValue',a.get('title')),
+                    $("#title_img").textbox('setValue',a.get('title_img')),
+                    $("#editor_id").textbox('setValue',a.get('editor_id')),
+                    $("#summary").textbox('setValue',a.get('summary')),
+                    $('#author').textbox('setValue', a.get('author'))
+                }
+            });
+        }
+
+        /*点击保存按钮事件1、输入验证（1、空验证，格式验证）。2、验证通过提价表单。3、表单提价失败并提示。4、表单提价成功并提示是否继续。*/
+        $('#btn_save_').on('click', function () {
+
+            /*isValidateForm  判断是否已经验证  boolean*/
+            var isValidateForm = $('#ff').form('enableValidation').form('validate');
+            if(isValidateForm){
+                /*1、修改操作*/
+                if (objectId != null) {
+                    query.get(objectId, {
+                        success: function (article) {
+                            article.save({
+                                title: $('#title').val(),
+                                title_img: $('#title_img').val(),
+                                content: $('#editor_id').val(),
+                                author: $('#author').val(),
+                                summary: $('#summary').val()
+                            }, {
+                                success: function () {
+                                    toArticlList();
+                                },
+                                error: function () {
+                                    $.messager.alert('提示', '文章在服务端更新失败!');
+                                }
+                            });
+                        },
+                        error: function (object, error) {
+                            $.messager.alert('提示', '未查到对象去更新!');
+                        }
+                    });
+                }
+                /*2、新增操作*/
+                else {
+                article.save({
+                    title: $('#title').val(),
+                    title_img: $('#title_img').val(),
+                    content: $('#editor_id').val(),
+                    author: $('#author').val(),
+                    summary: $('#summary').val()
+                }, {
+                    success: function () {
+                        $.messager.confirm('提示', '文章添加成功，是否继续添加文章', function (r) {
+                            if (r) {
+                                var tab = $('#tt').tabs('getSelected');
+                                tab.panel('refresh', 'page/article/add.html');
+                            } else {
+                                toArticlList();
+                            }
+                        });
+                    },
+                    error: function () {
+                        $.messager.alert('提示', '文章在服务端添加失败!');
+                    }
+                });
+            }
+            }
+        });
+
+        /*点击取消按钮事件关闭当前窗口,并返回列表页面*/
+        $('#btn_cancel_').on('click', function () {
+            toArticlList();
+        });
+
+        /*返回主列表方法（会在多处调用）*/
+        function toArticlList() {
+            localStorage.clear();
+            var tt = $('#tt');
+            var tab = $('#tt').tabs('getSelected');
+            $('#tt').tabs('close', $('#tt').tabs('getTabIndex', tab));
+            if (tt.tabs('exists', '文章列表')) {//如果tab已经存在,则选中并刷新该tab
+                tt.tabs('select', '文章列表');
+                $('#tt').tabs('getSelected').panel('refresh', 'page/article/list.html')
+            } else {
+                $('#tt').tabs('add', {
+                    title: '文章列表',
+                    href: 'page/article/list.html',
+                    closable: true,
+                    cache: true
+                });
+            }
+        }
+
+    });
+</script>
+</body>
+</html>

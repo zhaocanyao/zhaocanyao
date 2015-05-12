@@ -1,0 +1,157 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>文章列表</title>
+</head>
+
+<body>
+
+<table id="dg"></table>
+<div id="pp" style="background:#efefef;border:1px solid #ccc;"></div>
+
+<script type="text/javascript">
+	$(function(){
+		var Article = AV.Object.extend("article");
+		var articleQuery = new AV.Query(Article);
+
+		/*初始化数据表格并填充数据填充数据*/
+		function initDataGride(pageNumber,pageSize){
+			AV.Query.doCloudQuery('select count(*),* from article limit ?,?',[(pageNumber-1)*pageSize,pageSize],{
+				success:function(result){
+					var results = result.results;
+					if(results){
+						var articles = [];
+						for (var i = 0; i < results.length; i++) {
+							var object = results[i];
+							var a = {title:object.get('title')
+								,title_img:object.get('title_img')
+								,content:object.get('content')
+								,summary:object.get('summary')
+								,author:object.get('author')
+								,id:object.id};
+							articles.push(a);
+						}
+						$('#dg').datagrid({	data:articles});
+					}
+
+					$('#pp').pagination({
+						total:result.count
+					});
+				}
+			});
+		}
+
+		initDataGride();
+
+		/*初始化分页*/
+		$('#pp').pagination({
+			total:2000,
+			pageSize:10,
+			pageList:[2,4,6,8,10,20,30,40,50,100,],
+			onSelectPage:function(pageNumber, pageSize){
+				initDataGride(pageNumber,pageSize);
+			}
+		});
+
+		/*工具操作*/
+		$('#dg').datagrid({
+			title:'文章管理',
+			iconCls:'icon-cut',
+			border:false,
+			rownumbers:true,
+			idField:'id',
+			columns:[[
+				{field:'',title:'',width:50,checkbox:true},
+				{field:'title',title:'标题',width:100},
+				{field:'title_img',title:'标题图片',width:100},
+				{field:'content',title:'内容',width:100},
+				{field:'summary',title:'摘要',width:100},
+				{field:'author',title:'作者',width:100},
+				{field:'id',hidden:true}
+			]],
+			toolbar: [{
+				text:'添加',
+				iconCls: 'icon-add',
+				handler: function(){
+					sessionStorage.removeItem('objectId');
+					var tab = $('#tt').tabs('getSelected');
+					$('#tt').tabs('update', {
+						tab: tab,
+						options: {
+							title: '添加文章',
+							href: 'page/article/add.html' 
+						}
+					});
+				}
+			},'-',{
+				text:'修改',
+				iconCls: 'icon-edit',
+				handler: function(){
+					var allChecked = $('#dg').datagrid('getChecked');
+					if(allChecked.length==0){
+						$.messager.alert('提示','您还没有选择要修改的文章');
+					}else{
+						if(allChecked.length>1){
+							$.messager.alert('提示','文章选多了');
+						}else{
+							sessionStorage.setItem("objectId",allChecked[0].id);
+							var tab = $('#tt').tabs('getSelected');
+							$('#tt').tabs('update', {
+								tab: tab,
+								options: {
+									title: '修改文章',
+									href: 'page/article/add.html'
+								}
+							});
+						}
+					}
+				}
+			},'-',{
+				text:'删除',
+				iconCls: 'icon-remove',
+				handler: function(){
+					var allChecked = $('#dg').datagrid('getChecked');
+					if(allChecked.length!=0){
+						$(allChecked).each(function (i,arti) {
+							articleQuery.get(arti.id,{
+								success:function(article){
+									article.destroy({
+										success: function() {
+											$('#tt').tabs('getSelected').panel('refresh', 'page/article/list.html');
+										},
+										error: function(error) {
+											$.messager.alert('提示','删除失败');
+										}
+									});
+								},
+								error: function () {
+									$.messager.alert('提示','这条数据可能出了问题了');
+								}
+
+							});
+						});
+
+					}else{
+						$.messager.alert('提示','您还没有要选择要删除的文章');
+					}
+				}
+			},'-',{
+				text:'刷新',
+				iconCls: 'icon-reload',
+				handler: function(){
+					$('#tt').tabs('getSelected').panel('refresh', 'page/article/list.html');
+				}
+			},'-',{
+				text:'帮助',
+				iconCls: 'icon-help',
+				handler: function(){
+					$.messager.alert('提示','还在完善当中!');
+				}
+			}]
+		});
+
+	});
+</script>
+</body>
+</html>

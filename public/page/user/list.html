@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>用户列表</title>
+</head>
+
+<body>
+<table id="dg">
+</table>
+<script type="text/javascript">	
+	$(function(){
+		$('#dg').datagrid({    
+			url:'datagrid_data.json',   
+			title:'系统管理', 
+			iconCls:'icon-save',
+			pagination:true ,
+			border:false,
+			columns:[[    
+				{field:'code',title:'Code',width:100},    
+				{field:'name',title:'Name',width:100},    
+				{field:'price',title:'Price',width:100},
+				{field:'code',title:'Code',width:100},    
+				{field:'name',title:'Name',width:100},    
+				{field:'price',title:'Price',width:100}    
+			]],
+			toolbar: [{
+				text:'添加',
+				iconCls: 'icon-add',
+				handler: function(){
+					var tab = $('#tt').tabs('getSelected');
+					$('#tt').tabs('update', {
+						tab: tab,
+						options: {
+							title: '添加用户',
+							href: 'page/user/add.html' 
+						}
+					});
+				}
+			},'-',{
+				text:'保存',
+				iconCls: 'icon-save',
+				handler: function(){alert('编辑按钮')}
+			},'-',{
+				text:'修改',
+				iconCls: 'icon-edit',
+				handler: function(){alert('编辑按钮')}
+			},'-',{
+				text:'删除',
+				iconCls: 'icon-remove',
+				handler: function(){alert('编辑按钮')}
+			},'-',{
+				text:'刷新',
+				iconCls: 'icon-reload',
+				handler: function(){alert('编辑按钮')}
+			},'-',{
+				text:'帮助',
+				iconCls: 'icon-help',
+				handler: function(){alert('帮助按钮')}
+			}]
+		}); 
+	});
+</script>
+</body>
+</html>

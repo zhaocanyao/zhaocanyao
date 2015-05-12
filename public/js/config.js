@@ -1,9 +1,6 @@
 /**
  * Created by lzw on 14-8-21.
  */
-/*var appId = '7w25ol9vos571m9r9vz6cobpmi85smwyywenol0bhez3fbyb';
-var appKey = '2sz6a5fhupgvro5xqk0tbd4b6hogye5d25pgommibrq679e1';*/
-
 var appId = 'whf1ql41jgf2nnt0ezx06oo28tetg99nv2gypxcfvjpa4337';
 var appKey = 'nl880ytozwdkd7m5ng3xnud169c77v0qa6y5vbissl4iz514';
 
