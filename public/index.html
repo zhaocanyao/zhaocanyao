@@ -1,0 +1,101 @@
+<!DOCTYPE html><>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>test</title></head>
+<body>
+图片：<input type="file" id="housepic"><br/><br/>
+课程地址：<input type="text" id="houselink" class="w80"/><br/><br/>
+<input type="button" value="保存" id="btn_save"> &nbsp;
+<input type="button" value="更新" id="btn_update"> &nbsp;
+<input type="button" value="取消" id="btn_cancle">
+
+<script src="https://cn.avoscloud.com/scripts/lib/av-0.4.1.min.js"></script>
+<script src="js/jquery-2.0.3.min.js"></script>
+<script src="js/config.js"></script>
+<script type="text/javascript">
+    var KC, currentItem = null, pics = {};
+    $(function () {
+        AV.$ = jQuery;
+        KC = AV.Object.extend('student');
+       // alert(KC);
+        var query = new AV.Query(KC);
+
+        query.find({
+            success: function (results) {
+             // alert(results);
+                if (results.length > 0) {
+                    var object = results[results.length-1];
+                    var jppic = object.get("uname");
+                    document.getElementById("houselink").value=jppic;
+
+
+                }
+                else {
+                    html = "暂无数据";
+                }
+
+            },
+            error: function (error) {
+                alert("Error: " + error.code + " " + error.message);
+            }
+          //  location.href = "index.html";
+        });
+
+
+        //保存数据
+        $("#btn_save").on("click", function () {
+            var houselink = $("#houselink").val();
+            if (!houselink) {
+                alert("请把信息输入完整!");
+                return false;
+            }
+            var upFile = $("#housepic")[0];
+            if (upFile.files.length > 0) {
+                var file = upFile.files[0];
+                alert(file);
+                var timestamp = Date.parse(new Date());
+                var avFile = new AV.File(timestamp, file);
+                avFile.save().then(function () {
+                    if (!currentItem) {
+                        var jgP = new JXJ();
+                        save(jgP, avFile.url());
+                    }
+                    else {
+                        save(currentItem, avFile.url())
+                    }
+                }, function (error) {
+                    // The file either could not be read, or could not be saved to AV.
+                    alert("上传图片出错！");
+                });
+            }
+            else {
+                if (!currentItem) {
+                    alert("请选择大图");
+                    return false;
+                }
+                save(currentItem)
+            }
+
+            var GameScore = AV.Object.extend("student");
+            var gameScore = new GameScore();
+            gameScore.set("uname", houselink);
+            gameScore.save(null, {
+                success: function(gameScore) {
+                    // Execute any logic that should take place after the object is saved.
+                    alert('New object created with objectId: ' + gameScore.id);
+                },
+                error: function(gameScore, error) {
+                    // Execute any logic that should take place if the save fails.
+                    // error is a AV.Error with an error code and description.
+                    alert('Failed to create new object, with error code: ' + error.message);
+                }
+            });
+        });
+
+
+
+    });
+
+</script>
+</body>
+</html>
